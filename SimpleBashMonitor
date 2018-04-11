@@ -5,10 +5,9 @@ NodeName=MyNode
 
 # path and filename for your site, should be correct for ubuntu/nginx
 html_path="/var/www/html/index.htm"
-html_directory="/var/www/html/"
-# path to RaiBlocks folder, NO slash at the end
-raiblocks_path=/root/RaiBlocks
-
+# path to directories, WITHOUT slash at the end
+html_directory="/var/www/html"
+raiblocks_path="/root/RaiBlocks"
 
 ##### Edit carefully from here on, read comments ######
 
@@ -22,10 +21,11 @@ echo "</p></body></html>" >> $html_path
 /usr/local/bin/weight_set $account
 echo  "<head><link rel='stylesheet' type='text/css' href='style.css'><title>Node Monitor $NodeName</title><meta http-equiv='refresh' content='30'></head><body><h2>Simple Bash Node Monitor</h2><p>Block" > $html_path.gen
 /usr/local/bin/blockcount| grep count |sed 's/"/ /g'  >> $html_path.gen
-echo "<br/>Node running for <b>" >> $htmlpath.gen
+/usr/local/bin/blockcount| grep unchecked |sed 's/"/ /g' >> $html_path.gen
+
+echo "<br/>Node running for <b>" >> $html_path.gen
 ps -eo comm,etime | grep -i rai_node | awk '{print $2}' | sed 's/-/ days /' | awk -F'[: ]+' '{if($2 == "days" && NF==5){print $1+0, $2, $3+0"h:"$4+0"m"}else if($2 == "days" && NF==4){print $1+0, $2, $3+0"m:"$4+0"s"}else{ if(NF==2){print $1+0"m:"$2+0"sec"}else{print $1+0"h:"$2+0"m"}}}' >> $html_path.gen
 
-/usr/local/bin/blockcount| grep unchecked |sed 's/"/ /g' >> $html_path.gen
 echo "</b><br/>Node Version:" >> $html_path.gen
 
 /usr/local/bin/version | grep Rai | awk '{print $3}'|sed 's/"//g' >> $html_path.gen
@@ -44,7 +44,6 @@ echo  "<br/>Representatives online: " >> $html_path.gen
 echo  "<br/>Voting Weight: " >> $html_path.gen
 /usr/local/bin/account_weight |awk '{print $2}'| sed 's:^.\(.*\).$:\1:'|sed -r 's/.{30}$//' |xargs printf "%'.0f\n"  >> $html_path.gen
 echo  "<br/>Server:" >> $html_path.gen
-
 cat /etc/issue >>  $html_path.gen
 
 echo  "<br/>CPU Load:" >> $html_path.gen
