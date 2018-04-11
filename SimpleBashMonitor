@@ -9,21 +9,30 @@ html_directory="/var/www/html/"
 # path to RaiBlocks folder, NO slash at the end
 raiblocks_path=/root/RaiBlocks
 
-#####################
-# stop editing here #
-#####################
+
+##### Edit carefully from here on, read comments ######
+
+RUNNING=$(curl --connect-timeout 3 --max-time 5 -g -d '{ "action": "version" }' [::ffff:127.0.0.1]:7076);
+        if [ $? -ne 0 ]; then
+#node not running
+echo "<p> ... Node not running .... " >> $html_path
+echo "</p></body></html>" >> $html_path
+        else
+
 /usr/local/bin/weight_set $account
 echo  "<head><link rel='stylesheet' type='text/css' href='style.css'><title>Node Monitor $NodeName</title><meta http-equiv='refresh' content='30'></head><body><h2>Simple Bash Node Monitor</h2><p>Block" > $html_path.gen
 /usr/local/bin/blockcount| grep count |sed 's/"/ /g'  >> $html_path.gen
+echo "<br/>Node running for <b>" >> $htmlpath.gen
+ps -eo comm,etime | grep -i rai_node | awk '{print $2}' | sed 's/-/ days /' | awk -F'[: ]+' '{if($2 == "days" && NF==5){print $1+0, $2, $3+0"h:"$4+0"m"}else if($2 == "days" && NF==4){print $1+0, $2, $3+0"m:"$4+0"s"}else{ if(NF==2){print $1+0"m:"$2+0"sec"}else{print $1+0"h:"$2+0"m"}}}' >> $html_path.gen
 
 /usr/local/bin/blockcount| grep unchecked |sed 's/"/ /g' >> $html_path.gen
-echo "<br/>Node Version:" >> $html_path.gen
+echo "</b><br/>Node Version:" >> $html_path.gen
 
 /usr/local/bin/version | grep Rai | awk '{print $3}'|sed 's/"//g' >> $html_path.gen
-echo "<br/>Node Account:" >> $html_path.gen
+echo "<br/>Node Account:<b>" >> $html_path.gen
 echo $account  >> $html_path.gen
 
-echo  "<br/>Peers: " >> $html_path.gen
+echo  "</b><br/>Peers: " >> $html_path.gen
 /usr/local/bin/peers|wc -l >> $html_path.gen
 
 #this below needs CPU and time, does not work on small setups
@@ -34,9 +43,9 @@ echo  "<br/>Representatives online: " >> $html_path.gen
 
 echo  "<br/>Voting Weight: " >> $html_path.gen
 /usr/local/bin/account_weight |awk '{print $2}'| sed 's:^.\(.*\).$:\1:'|sed -r 's/.{30}$//' |xargs printf "%'.0f\n"  >> $html_path.gen
-echo  "<br/>Server:" >> /var/www/html/index.htm
+echo  "<br/>Server:" >> $html_path.gen
 
-cat /etc/issue >>  /var/www/html/index.htm
+cat /etc/issue >>  $html_path.gen
 
 echo  "<br/>CPU Load:" >> $html_path.gen
 grep 'cpu ' /proc/stat | awk '{usage=($2+$4)*100/($2+$4+$5)} END {print usage}'|xargs printf "%'.2f\n"   >> $html_path.gen
@@ -133,4 +142,5 @@ echo "</p></body>" >> $html_path.gen
 # update api.php for https://nanonode.ninja/ 
 cp $html_directory/api $html_directory/api.php
 blockcount |tail -n 3|sed -e 's/count/currentBlock/g' >> $html_directory/api.php
-cp $html_directory/$html_path.gen  $html_directory/$html_path
+cp  $html_path.gen   $html_path
+fi
