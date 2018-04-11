@@ -3,44 +3,48 @@
 account=none
 NodeName=MyNode
 
-#the path and filename to your site, should be this for ubuntu/nginx
+# path and filename for your site, should be correct for ubuntu/nginx
 html_path="/var/www/html/index.htm"
+html_directory="/var/www/html/"
+# path to RaiBlocks folder, NO slash at the end
+raiblocks_path=/root/RaiBlocks
 
 #####################
 # stop editing here #
 #####################
 /usr/local/bin/weight_set $account
-echo  "<head><link rel='stylesheet' type='text/css' href='style.css'><title>Node Monitor $NodeName</title><meta http-equiv='refresh' content='30'></head><body><h2>Simple Bash Node Monitor</h2><p>Block" > $html_path
+echo  "<head><link rel='stylesheet' type='text/css' href='style.css'><title>Node Monitor $NodeName</title><meta http-equiv='refresh' content='30'></head><body><h2>Simple Bash Node Monitor</h2><p>Block" > $html_path.gen
+/usr/local/bin/blockcount| grep count |sed 's/"/ /g'  >> $html_path.gen
 
-/usr/local/bin/blockcount| grep count |sed 's/"/ /g'  >> $html_path
+/usr/local/bin/blockcount| grep unchecked |sed 's/"/ /g' >> $html_path.gen
+echo "<br/>Node Version:" >> $html_path.gen
 
-/usr/local/bin/blockcount| grep unchecked |sed 's/"/ /g' >> $html_path
-echo "<br/>Node Version:" >> $html_path
+/usr/local/bin/version | grep Rai | awk '{print $3}'|sed 's/"//g' >> $html_path.gen
+echo "<br/>Node Account:" >> $html_path.gen
+echo $account  >> $html_path.gen
 
-/usr/local/bin/version | grep Rai | awk '{print $3}'|sed 's/"//g' >> $html_path
-echo "<br/>Node Account:" >> $html_path
-echo $account  >> $html_path
+echo  "<br/>Peers: " >> $html_path.gen
+/usr/local/bin/peers|wc -l >> $html_path.gen
 
-echo  "<br/>Peers: " >> $html_path
-/usr/local/bin/peers|wc -l >> $html_path
-#echo  "<br/>Delegators: " >> $html_path
-#/usr/local/bin/delegator_count | grep count |awk '{print $2}'| sed 's:^.\(.*\).$:\1:'  >> $html_path
+#this below needs CPU and time, does not work on small setups
+#echo  "<br/>Delegators: " >> $html_path.gen
+#/usr/local/bin/delegator_count | grep count |awk '{print $2}'| sed 's:^.\(.*\).$:\1:'  >> $html_path.gen
+echo  "<br/>Representatives online: " >> $html_path.gen
+/usr/local/bin/rep_online | wc -l >> $html_path.gen
 
-echo  "<br/>Voting Weight: " >> $html_path
-
-/usr/local/bin/account_weight |awk '{print $2}'| sed 's:^.\(.*\).$:\1:'|sed -r 's/.{30}$//' |xargs printf "%'.0f\n"  >> /var/www/html/index.htm
+echo  "<br/>Voting Weight: " >> $html_path.gen
+/usr/local/bin/account_weight |awk '{print $2}'| sed 's:^.\(.*\).$:\1:'|sed -r 's/.{30}$//' |xargs printf "%'.0f\n"  >> $html_path.gen
 echo  "<br/>Server:" >> /var/www/html/index.htm
 
 cat /etc/issue >>  /var/www/html/index.htm
 
+echo  "<br/>CPU Load:" >> $html_path.gen
+grep 'cpu ' /proc/stat | awk '{usage=($2+$4)*100/($2+$4+$5)} END {print usage}'|xargs printf "%'.2f\n"   >> $html_path.gen
+echo "%<br/>" >> $html_path.gen
 
-echo  "<br/>CPU Load:" >> $html_path
-grep 'cpu ' /proc/stat | awk '{usage=($2+$4)*100/($2+$4+$5)} END {print usage}'|xargs printf "%'.2f\n"   >> $html_path
-echo "%<br/>" >> $html_path
+free -m | awk 'NR==2{printf "Memory Usage: %s/%sMB (%.2f%%)\n", $3,$2,$3*100/$2 }' >> $html_path.gen
 
-free -m | awk 'NR==2{printf "Memory Usage: %s/%sMB (%.2f%%)\n", $3,$2,$3*100/$2 }' >> $html_path
-
-LASTLOG=$(ls /root/RaiBlocks/log/ |sort -rn | head -1)
+LASTLOG=$(ls $raiblocks_path/log/ |sort -rn | head -1)
 LOGTIME=$(echo $LASTLOG | cut -c 16-23|sed 's/-/:/g')
 NOW=$(date +"%H:%M:%S")
 StartDate=$(date -u -d "$LOGTIME" +"%s")
@@ -48,48 +52,48 @@ FinalDate=$(date -u -d "$NOW" +"%s")
 SINCE=$(date -u -d "0 $FinalDate sec - $StartDate sec" +"%H:%M:%S")
 SECS="1970-01-01 $SINCE"
 TOTSEC=$(date -d "$SECS" +%s)
-FORKS=$(cat /root/RaiBlocks/log/$LASTLOG | grep -i fork|wc -l)
+FORKS=$(cat $raiblocks_path/log/$LASTLOG | grep -i fork|wc -l)
 # Uncomment this and comment the next line if your node is NOT a representative and has 0 voting weight
-#BLOCKS=$(cat /root/RaiBlocks/log/$LASTLOG|grep  republished | wc -l)
-BLOCKS=$(cat /root/RaiBlocks/log/$LASTLOG|grep  confirmed | wc -l)
+#BLOCKS=$(cat $raiblocks_path/log/$LASTLOG|grep  republished | wc -l)
+BLOCKS=$(cat $raiblocks_path/log/$LASTLOG|grep  confirmed | wc -l)
 TOTMIN=$(($TOTSEC/60))
 
-echo "<br/><br/>" >> $html_path
-echo "[ Log Talking Time" >> $html_path
-date -u -d "0 $FinalDate sec - $StartDate sec" +"%H:%M" >>  $html_path
-echo " ]<br/>" >> $html_path
-echo "$(($BLOCKS/$TOTMIN)) Blocks/min" >> $html_path
-echo "<br/>" >> $html_path
-cat /root/RaiBlocks/log/$LASTLOG | grep -i fork|wc -l >> $html_path
-echo  "forks detected and voting requested to" >> $html_path
-cat /root/RaiBlocks/log/$LASTLOG|grep  Broadcasted  |tail -1|head -1| awk '{print $10}' >>  $html_path
-echo "representatives" >> $html_path
+echo "<br/><br/>" >> $html_path.gen
+echo "[ Log Talking Time" >> $html_path.gen
+date -u -d "0 $FinalDate sec - $StartDate sec" +"%H:%M" >>  $html_path.gen
+echo " ]<br/>" >> $html_path.gen
+echo "$(($BLOCKS/$TOTMIN)) Blocks/min" >> $html_path.gen
+echo "<br/>" >> $html_path.gen
+cat  $raiblocks_path/log/$LASTLOG | grep -i fork|wc -l >> $html_path.gen
+echo  "forks detected and voting requested to" >> $html_path.gen
+cat  $raiblocks_path/log/$LASTLOG|grep  Broadcasted  |tail -1|head -1| awk '{print $10}' >>  $html_path.gen
+echo "representatives" >> $html_path.gen
 
-echo "<br/>" >> $html_path
-cat /root/RaiBlocks/log/$LASTLOG|grep  Broadcasted |wc -l >>  $html_path
-echo "block confirm requests (2 per fork) broadcasted" >> $html_path
-echo "<br/>" >> $html_path
-echo "A fork detected every $(($TOTSEC/$FORKS)) seconds" >>  $html_path
-echo "<br/>" >> $html_path
-echo "<br/>" >> $html_pathxrb_1i9ugg14c5sph67z4st9xk8xatz59xntofqpbagaihctg6ngog1f45mwoa54
+echo "<br/>" >> $html_path.gen
+cat $raiblocks_path/log/$LASTLOG|grep  Broadcasted |wc -l >>  $html_path.gen
+echo "block confirm requests (2 per fork) broadcasted" >> $html_path.gen
+echo "<br/>" >> $html_path.gen
+echo "A fork detected every $(($TOTSEC/$FORKS)) seconds" >>  $html_path.gen
+echo "<br/>" >> $html_path.gen
+echo "<br/>" >> $html_path.gen 
 
-cat /root/RaiBlocks/log/$LASTLOG|grep -i found|wc -l >>  $html_path
-echo "representatives found " >> $html_path
-echo "<br/>" >> $html_path
-echo $BLOCKS |xargs printf "%'.0f\n" >>  $html_path
-echo "blocks confirmed to peers" >> $html_path
+cat $raiblocks_path/log/$LASTLOG|grep -i found|wc -l >>  $html_path.gen
+echo "representatives found " >> $html_path.gen
+echo "<br/>" >> $html_path.gen
+echo $BLOCKS |xargs printf "%'.0f\n" >>  $html_path.gen
+echo "blocks confirmed to peers" >> $html_path.gen
 # for NON voting nodes comment above and uncomment below
-#echo "blocks republished to peers" >> $html_path
+#echo "blocks republished to peers" >> $html_path.gen
 
-echo "<br/>" >> $html_path
-cat /root/RaiBlocks/log/$LASTLOG|grep  establis |wc -l|xargs printf "%'.0f\n" >>  $html_path
-echo "Connections established" >> $html_path
-echo  "<h3>Network Protocol Versions</h3>" >> $html_path
+echo "<br/>" >> $html_path.gen
+cat $raiblocks_path/log/$LASTLOG|grep  establis |wc -l|xargs printf "%'.0f\n" >>  $html_path.gen
+echo "Connections established" >> $html_path.gen
+echo  "<h3>Network Protocol Versions</h3>" >> $html_path.gen
 
 #table network versions
 TOTALPEERS=$(/usr/local/bin/peers |wc -l)
 
-echo "<table><tbody>"  >> $html_path
+echo "<table><tbody>"  >> $html_path.gen
 for i in \
 7 \
 6 \
@@ -97,36 +101,36 @@ for i in \
 4 \
 3
         do
-        echo "<tr><td class="version">"Version $i"</td><td class="peercount">"  >> $html_path
-                /usr/local/bin/peers |awk '{print $2}'| sed 's:^.\(.*\).$:\1:' |grep  $i|wc -l  >> $html_path
+        echo "<tr><td class="version">"Version $i"</td><td class="peercount">"  >> $html_path.gen
+                /usr/local/bin/peers |awk '{print $2}'| sed 's:^.\(.*\).$:\1:' |grep  $i|wc -l  >> $html_path.gen
                 PEERS=$(/usr/local/bin/peers |awk '{print $2}'| sed 's:^.\(.*\).$:\1:' |grep  $i|wc -l  )
-                echo "</td><td class="percent">" >> $html_path
-                echo "scale = 2; ($PEERS / $TOTALPEERS)" | bc -l | awk -F '.' '{print $2}' >> $html_path
-               echo "%</td></tr>" >>  $html_path
+                echo "</td><td class="percent">" >> $html_path.gen
+                echo "scale = 2; ($PEERS / $TOTALPEERS)" | bc -l | awk -F '.' '{print $2}' >> $html_path.gen
+               echo "%</td></tr>" >>  $html_path.gen
         done
-        echo "</tbody></table>" >> $html_path
+        echo "</tbody></table>" >> $html_path.gen
 
 
 
-echo "<h4>Errors:</h4><p class="medium">" >> $html_path
-cat /root/RaiBlocks/log/$LASTLOG|grep  canceled |wc -l |xargs printf "%'.0f\n" >>  $html_path
-echo "type Operation canceled" >> $html_path
+echo "<h4>Errors:</h4><p class="medium">" >> $html_path.gen
+cat $raiblocks_path/log/$LASTLOG|grep  canceled |wc -l |xargs printf "%'.0f\n" >>  $html_path.gen
+echo "type Operation canceled" >> $html_path.gen
 
-echo "<br/>" >> $html_path
-cat /root/RaiBlocks/log/$LASTLOG|grep  reset |wc -l >>  $html_path
-echo "Connections reset by peer" >> $html_path
+echo "<br/>" >> $html_path.gen
+cat $raiblocks_path/log/$LASTLOG|grep  reset |wc -l >>  $html_path.gen
+echo "Connections reset by peer" >> $html_path.gen
 
-echo "<br/>" >> $html_path
-cat /root/RaiBlocks/log/$LASTLOG|grep  file |wc -l|xargs printf "%'.0f\n" >>  $html_path
-echo "type End of file" >> $html_path
-echo "<br/>" >> $html_path
+echo "<br/>" >> $html_path.gen
+cat $raiblocks_path/log/$LASTLOG|grep  file |wc -l|xargs printf "%'.0f\n" >>  $html_path.gen
+echo "type End of file" >> $html_path.gen
+echo "<br/>" >> $html_path.gen
 
-cat /root/RaiBlocks/log/$LASTLOG|grep  initiat |wc -l >>  $html_path
-echo "Error initiating bootstrap connection to ... No route to host" >> $html_path
+cat $raiblocks_path/log/$LASTLOG|grep  initiat |wc -l >>  $html_path.gen
+echo "Error initiating bootstrap connection to ... No route to host" >> $html_path.gen
 
-echo "</p></body>" >> $html_path
+echo "</p></body>" >> $html_path.gen
 
 # update api.php for https://nanonode.ninja/ 
-cp $html_path/api $html_path/api.php
-blockcount |tail -n 3|sed -e 's/count/currentBlock/g' >> $html_path/api.php
-
+cp $html_directory/api $html_directory/api.php
+blockcount |tail -n 3|sed -e 's/count/currentBlock/g' >> $html_directory/api.php
+cp $html_directory/$html_path.gen  $html_directory/$html_path
