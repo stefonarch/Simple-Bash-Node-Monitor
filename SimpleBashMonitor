@@ -19,6 +19,12 @@ echo "</p></body></html>" >> $html_path
         else
 
 /usr/local/bin/weight_set $account
+
+# update api.php for https://nanonode.ninja/ 
+cp $html_directory/api $html_directory/api.php
+sleep 3
+blockcount |tail -n 3|sed -e 's/count/currentBlock/g' >> $html_directory/api.php
+# generate html
 echo  "<head><link rel='stylesheet' type='text/css' href='style.css'><title>Node Monitor $NodeName</title><meta http-equiv='refresh' content='30'></head><body><h2>Simple Bash Node Monitor</h2><p>Block" > $html_path.gen
 /usr/local/bin/blockcount| grep count |sed 's/"/ /g'  >> $html_path.gen
 /usr/local/bin/blockcount| grep unchecked |sed 's/"/ /g' >> $html_path.gen
@@ -138,8 +144,6 @@ echo "Error initiating bootstrap connection to ... No route to host" >> $html_pa
 
 echo "</p></body>" >> $html_path.gen
 
-# update api.php for https://nanonode.ninja/ 
-cp $html_directory/api $html_directory/api.php
-blockcount |tail -n 3|sed -e 's/count/currentBlock/g' >> $html_directory/api.php
+
 cp  $html_path.gen   $html_path
 fi
