@@ -1,0 +1,3 @@
+#!/bin/bash
+echo "#!/bin/bash" >   /usr/local/bin/account_weight
+printf "/usr/bin/curl -g -d '{ \"action\": \"account_weight\", \"account\":\"$1\" }' '[::ffff:127.0.0.1]:7076' " >>  /usr/local/bin/account_weight

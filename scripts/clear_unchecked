@@ -1,0 +1,4 @@
+#!/bin/bash
+curl -g -d '{ "action": "unchecked_clear" }' '[::ffff:127.0.0.1]:7076'
+echo "$i Cleared unchecked blocks at $(date +"%a %e %B  %H:%M")" >> /root/node.log
+

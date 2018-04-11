@@ -1,0 +1,3 @@
+#!/bin/bash
+echo "#!/bin/bash" >   /usr/local/bin/rep_account
+printf "/usr/bin/curl -g -d '{ \"action\": \"delegators_count\", \"account\":\"$1\" }' '[::ffff:127.0.0.1]:7076' " >>  /usr/local/bin/rep_account

@@ -1,0 +1,3 @@
+#!/bin/bash
+curl -g -d '{ "action": "bootstrap_any" }' '[::ffff:127.0.0.1]:7076'
+

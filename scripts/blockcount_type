@@ -1,0 +1,3 @@
+#!/bin/bash
+date +"%a %e %B  %H:%M" > /usr/share/nginx/html/data.txt&&
+curl -g -d '{ "action": "block_count_type" }' '[::ffff:127.0.0.1]:7076' 

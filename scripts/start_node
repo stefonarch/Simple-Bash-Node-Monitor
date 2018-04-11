@@ -1,0 +1,4 @@
+#!/bin/bash
+/root/rai-11.0.0-Linux/bin/rai_node --daemon   --data_path=/media/ramdisk/RaiBlocks  &
+echo "$i startet at $(date +"%a %e %B  %H:%M")" >> /root/node.log
+

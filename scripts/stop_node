@@ -1,0 +1,4 @@
+#!/bin/bash
+/usr/bin/curl -g -d '{ "action": "stop" }' '[::ffff:127.0.0.1]:7076'
+echo "$i stopped at $(date +"%a %e %B  %H:%M")" >> /root/node.log
+

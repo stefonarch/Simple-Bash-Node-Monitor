@@ -1,0 +1,12 @@
+#!/bin/sh
+RUNNING=$(curl --connect-timeout 3 --max-time 5 -g -d '{ "action": "version" }' [::ffff:127.0.0.1]:7076);
+	if [ $? -ne 0 ]; then
+                # No RPC response
+	killall rai_node
+	sleep 3
+	/usr/local/bin/start_node
+                echo "No RPC response, Node restartet at $(date +"%a %e %B  %H:%M")" >> /root/node.log 
+        else
+                #echo "Node running fine  at $(date +"%a %e %B %H:%M")"  >> /root/node.log
+        fi
+

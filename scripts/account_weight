@@ -1,0 +1,2 @@
+#!/bin/bash
+/usr/bin/curl -g -d '{ "action": "account_weight", "account":"xrb_3kxxs46k7x581icfxfaxmdsg1gmzonj6m3bjxyqek4jy4mu65r6oifisuf6k"}' '[::ffff:127.0.0.1]:7076' 
