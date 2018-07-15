@@ -1,12 +1,12 @@
 #!/bin/bash
-#######################################################################
-##                                                                   ##
-##    This script installs and configures SimpleBashMonitor.         ##
-##    It adds also some useful commands to control the node.         ##
-##    Use it at your own risk.                                       ##
-##    For other systems just take out|adapt the apt commands         ##
-##                                                                   ##
-#######################################################################
+############################################################
+##                                                                                                                                                   ##
+##    This script installs and configures SimpleBashMonitor.                                                          ##
+##    It adds also some useful commands to control the node.                                                      ##
+##    Use it at your own risk.                                                                                                          ##
+##    For other systems just take out|adapt the apt commands                                                    ##
+##                                                                                                                                                  ##
+###########################################################
 
 if [[ $EUID -ne 0 ]]; then
     echo "Please run this script as user root."
